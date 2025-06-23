@@ -1,0 +1,161 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   core.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mdios-el <mdios-el@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/06/23 16:51:20 by mdios-el          #+#    #+#             */
+/*   Updated: 2025/06/23 18:20:12 by mdios-el         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "philo.h"
+
+static int	is_finished(t_data *data)
+{
+	int	ret;
+
+	ret = 0;
+	pthread_mutex_lock(&data->mutex_dead);
+	if (data->dead)
+		ret = 1;
+	pthread_mutex_unlock(&data->mutex_dead);
+	return (ret);
+}
+
+static void	eat(t_philo *philo)
+{
+	pthread_mutex_t	*first_fork;
+	pthread_mutex_t	*second_fork;
+
+	if (philo->id % 2 == 0)
+	{
+		first_fork = &philo->data->forks[philo->id % philo->data->num_philos];
+		second_fork = &philo->data->forks[philo->id - 1];
+	}
+	else
+	{
+		first_fork = &philo->data->forks[philo->id - 1];
+		second_fork = &philo->data->forks[philo->id % philo->data->num_philos];
+	}
+	pthread_mutex_lock(first_fork);
+	print_status(philo, "has taken a fork", C_YELLOW);
+	if (philo->data->num_philos == 1)
+	{
+		ft_usleep(philo->data->time_to_die);
+		pthread_mutex_unlock(first_fork);
+		return ;
+	}
+	pthread_mutex_lock(second_fork);
+	print_status(philo, "has taken a fork", C_YELLOW);
+	print_status(philo, "is eating", C_GREEN);
+	pthread_mutex_lock(&philo->mutex_meal);
+	philo->last_meal = get_time();
+	philo->eat_count++;
+	pthread_mutex_unlock(&philo->mutex_meal);
+	ft_usleep(philo->data->time_to_eat);
+	if (philo->data->max_meals != -1 && \
+		philo->eat_count == philo->data->max_meals)
+	{
+		pthread_mutex_lock(&philo->data->mutex_finished);
+		philo->data->finished_philos++;
+		pthread_mutex_unlock(&philo->data->mutex_finished);
+	}
+	pthread_mutex_unlock(second_fork);
+	pthread_mutex_unlock(first_fork);
+}
+
+static void	*routine(void *arg)
+{
+	t_philo	*philo;
+
+	philo = (t_philo *)arg;
+	if (philo->id % 2 == 0)
+		ft_usleep(1);
+	while (!is_finished(philo->data))
+	{
+		eat(philo);
+		if (philo->data->num_philos == 1)
+			break ;
+		print_status(philo, "is sleeping", C_BLUE);
+		ft_usleep(philo->data->time_to_sleep);
+		print_status(philo, "is thinking", C_CYAN);
+	}
+	return (NULL);
+}
+
+static int	check_death(t_philo *philo)
+{
+	long long	time;
+
+	pthread_mutex_lock(&philo->mutex_meal);
+	time = get_time() - philo->last_meal;
+	pthread_mutex_unlock(&philo->mutex_meal);
+	if (time >= philo->data->time_to_die)
+		return (1);
+	return (0);
+}
+
+static void	*monitor(void *arg)
+{
+	t_data	*data;
+	int		i;
+
+	data = (t_data *)arg;
+	while (1)
+	{
+		i = -1;
+		while (++i < data->num_philos)
+		{
+			if (check_death(&data->philos[i]))
+			{
+				print_status(&data->philos[i], "died", C_RED);
+				pthread_mutex_lock(&data->mutex_dead);
+				data->dead = 1;
+				pthread_mutex_unlock(&data->mutex_dead);
+				return (NULL);
+			}
+		}
+		if (data->max_meals != -1)
+		{
+			pthread_mutex_lock(&data->mutex_finished);
+			if (data->finished_philos >= data->num_philos)
+			{
+				pthread_mutex_unlock(&data->mutex_finished);
+				pthread_mutex_lock(&data->mutex_dead);
+				data->dead = 1;
+				pthread_mutex_unlock(&data->mutex_dead);
+				return (NULL);
+			}
+			pthread_mutex_unlock(&data->mutex_finished);
+		}
+		usleep(1000);
+	}
+	return (NULL);
+}
+
+void	start_simulation(t_data *data)
+{
+	int		i;
+	pthread_t	monitor_thread;
+
+	i = 0;
+	data->start_time = get_time();
+	while (i < data->num_philos)
+	{
+		pthread_mutex_lock(&data->philos[i].mutex_meal);
+		data->philos[i].last_meal = data->start_time;
+		pthread_mutex_unlock(&data->philos[i].mutex_meal);
+		pthread_create(&data->philos[i].thread, NULL, &routine, &data->philos[i]);
+		i++;
+	}
+	pthread_create(&monitor_thread, NULL, &monitor, data);
+	pthread_join(monitor_thread, NULL);
+	i = 0;
+	while (i < data->num_philos)
+	{
+		pthread_join(data->philos[i].thread, NULL);
+		i++;
+	}
+}
