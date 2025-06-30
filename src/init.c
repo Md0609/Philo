@@ -48,13 +48,8 @@ static int	init_forks(t_data *data)
 	return (1);
 }
 
-t_data	*init_data(int argc, char **argv)
+static void	init_args(t_data *data, int argc, char **argv)
 {
-	t_data	*data;
-
-	data = malloc(sizeof(t_data));
-	if (!data)
-		return (NULL);
 	data->num_philos = ft_atoi(argv[1]);
 	data->time_to_die = ft_atoi(argv[2]);
 	data->time_to_eat = ft_atoi(argv[3]);
@@ -65,13 +60,31 @@ t_data	*init_data(int argc, char **argv)
 	data->dead = 0;
 	data->finished_philos = 0;
 	data->start_time = get_time();
-	if (!init_philos(data) || !init_forks(data))
+}
+
+static int	init_global_mutexes(t_data *data)
+{
+	if (pthread_mutex_init(&data->mutex_print, NULL) != 0)
+		return (0);
+	if (pthread_mutex_init(&data->mutex_dead, NULL) != 0)
+		return (0);
+	if (pthread_mutex_init(&data->mutex_finished, NULL) != 0)
+		return (0);
+	return (1);
+}
+
+t_data	*init_data(int argc, char **argv)
+{
+	t_data	*data;
+
+	data = malloc(sizeof(t_data));
+	if (!data)
+		return (NULL);
+	init_args(data, argc, argv);
+	if (!init_philos(data) || !init_forks(data) || !init_global_mutexes(data))
 	{
 		cleanup(data);
 		return (NULL);
 	}
-	pthread_mutex_init(&data->mutex_print, NULL);
-	pthread_mutex_init(&data->mutex_dead, NULL);
-	pthread_mutex_init(&data->mutex_finished, NULL);
 	return (data);
 }

@@ -15,7 +15,10 @@ NAME = philo
 SRCS = src/main.c \
 	   src/init.c \
 	   src/core.c \
-	   src/utils.c
+	   src/utils.c \
+	   src/cleanup.c \
+	   src/monitor.c \
+	   src/routine.c
 
 OBJS = $(SRCS:.c=.o)
 

@@ -67,6 +67,14 @@ t_data		*init_data(int argc, char **argv);
 
 // Core
 void		start_simulation(t_data *data);
+void		eat(t_philo *philo);
+int			is_finished(t_data *data);
+
+// Monitor
+void		*monitor(void *arg);
+
+// Routine
+void		*routine(void *arg);
 
 // Utils
 int			ft_atoi(const char *str);
