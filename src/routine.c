@@ -17,8 +17,6 @@ void	*routine(void *arg)
 	t_philo	*philo;
 
 	philo = (t_philo *)arg;
-	if (philo->id % 2 == 0)
-		ft_usleep(1);
 	while (!is_finished(philo->data))
 	{
 		eat(philo);

@@ -24,7 +24,8 @@ int	is_finished(t_data *data)
 	return (ret);
 }
 
-static void	get_forks(t_philo *philo, pthread_mutex_t **first, pthread_mutex_t **second)
+static void	get_forks(t_philo *philo, pthread_mutex_t **first,
+						pthread_mutex_t **second)
 {
 	if (philo->id % 2 == 0)
 	{
@@ -45,7 +46,8 @@ static void	update_meal_status(t_philo *philo)
 	philo->eat_count++;
 	pthread_mutex_unlock(&philo->mutex_meal);
 	ft_usleep(philo->data->time_to_eat);
-	if (philo->data->max_meals != -1 && philo->eat_count == philo->data->max_meals)
+	if (philo->data->max_meals != -1
+		&& philo->eat_count == philo->data->max_meals)
 	{
 		pthread_mutex_lock(&philo->data->mutex_finished);
 		philo->data->finished_philos++;
@@ -75,13 +77,9 @@ void	eat(t_philo *philo)
 	pthread_mutex_unlock(first_fork);
 }
 
-
-
-
-
 void	start_simulation(t_data *data)
 {
-	int		i;
+	int			i;
 	pthread_t	monitor_thread;
 
 	i = 0;
@@ -91,7 +89,9 @@ void	start_simulation(t_data *data)
 		pthread_mutex_lock(&data->philos[i].mutex_meal);
 		data->philos[i].last_meal = data->start_time;
 		pthread_mutex_unlock(&data->philos[i].mutex_meal);
-		pthread_create(&data->philos[i].thread, NULL, &routine, &data->philos[i]);
+		pthread_create(&data->philos[i].thread, NULL,
+			&routine, &data->philos[i]);
+		ft_usleep(1);
 		i++;
 	}
 	pthread_create(&monitor_thread, NULL, &monitor, data);

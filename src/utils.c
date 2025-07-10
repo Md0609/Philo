@@ -54,7 +54,7 @@ void	print_status(t_philo *philo, char *status, char *color)
 	if (!philo->data->dead)
 	{
 		pthread_mutex_lock(&philo->data->mutex_print);
-		printf("%s%lld %d %s%s\n", color, get_time() - philo->data->start_time, 
+		printf("%s%lld %d %s%s\n", color, get_time() - philo->data->start_time,
 			philo->id, status, C_RESET);
 		pthread_mutex_unlock(&philo->data->mutex_print);
 	}

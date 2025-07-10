@@ -30,7 +30,7 @@
 
 // Structs
 
-struct s_data;
+struct	s_data;
 
 typedef struct s_philo
 {
@@ -40,7 +40,7 @@ typedef struct s_philo
 	long long		last_meal;
 	struct s_data	*data;
 	pthread_mutex_t	mutex_meal;
-}t_philo;
+}	t_philo;
 
 typedef struct s_data
 {
@@ -57,7 +57,7 @@ typedef struct s_data
 	pthread_mutex_t	mutex_print;
 	pthread_mutex_t	mutex_dead;
 	pthread_mutex_t	mutex_finished;
-}t_data;
+}	t_data;
 
 // Main
 int			check_args(int argc, char **argv);

@@ -52,8 +52,8 @@ static int	all_philos_ate(t_data *data)
 	{
 		pthread_mutex_unlock(&data->mutex_finished);
 		pthread_mutex_lock(&data->mutex_dead);
-			data->dead = 1;
-			pthread_mutex_unlock(&data->mutex_dead);
+		data->dead = 1;
+		pthread_mutex_unlock(&data->mutex_dead);
 		return (1);
 	}
 	pthread_mutex_unlock(&data->mutex_finished);
